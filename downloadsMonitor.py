@@ -108,6 +108,7 @@ class DownloadMonitor():
                     newPath = os.path.join(path, new_name)
                     os.link(oldPath, newPath)
                     filename = new_name
+                    self.processed_files.add(filename)
                 break
         if len(temp) <= 0:
             log("Error parsing filename %s" % filename)
@@ -149,7 +150,7 @@ class DownloadMonitor():
             for name in os.listdir(kidTvDir):
                 if name.lower() == show:
                     dest_path = os.path.join(kidTvDir, name)
-                    self.addedTVShow = True
+                    self.addedKidShow = True
                     break
 
         if dest_path == "":
@@ -160,9 +161,10 @@ class DownloadMonitor():
         log("Moving to directory %s" % dest_path)
         src = os.path.join(path, filename)
         try:
-            os.link(src, dest_path)
-        except IOError, e:
-            log("Unable to copy file. %s" % e)
+            dest_full_path = os.path.join(dest_path, filename)
+            os.link(src, dest_full_path)
+        except:
+            log("Unable to link. error={0}\\n src={1}\\n dest={2}".format(sys.exc_info()[0],src,dest_full_path))
             self.error_files.add(filename)
             self.error_file.write(filename + "\n")
 
@@ -181,8 +183,9 @@ class DownloadMonitor():
 
 watcher = DownloadMonitor()
 watcher.scanDirectory("/volume1/Downloads/")
-if watcher.addedTVShow:
+'''if watcher.addedTVShow:
     urllib2.urlopen("http://192.168.2.99:32400/library/sections/2/refresh")
 if watcher.addedKidShow:
     urllib2.urlopen("http://192.168.2.99:32400/library/sections/3/refresh")
+'''
 # watcher.scanDirectory("/Users/tobeswsu/Desktop/")
