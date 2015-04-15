@@ -85,15 +85,28 @@ class DownloadMonitor():
             pathname = os.path.join(path, filename)
             return False
         
-        temp = re.findall('(.*)\.[S|s]?(\d+)[x|e|E](\d+)(.*)', filename)
-        if len(temp) <= 0:
-            temp = re.findall('(.*) [S|s]?(\d+)[x|e|E](\d+)(.*)', filename)
-        if len(temp) <= 0:
-            temp = re.findall('(.*)\.(\d{4}?).(\d{2}\.\d{2}?)(.*)', filename)
-        if len(temp) <= 0:
-            temp = re.findall('(.*)(Season?).(Episode?)(.*)', filename)
-        if len(temp) <= 0:
-            temp = re.findall('(.*)(\d+?)x(\d+?).(.*)', filename)
+		parentDir = os.path.basename(path)
+        names = [filename,parentDir]
+        temp = ""
+        for name in names: 
+			temp = re.findall('(.*)\.[S|s]?(\d+)[x|e|E](\d+)(.*)', name)
+			if len(temp) <= 0:
+				temp = re.findall('(.*) [S|s]?(\d+)[x|e|E](\d+)(.*)', name)
+			if len(temp) <= 0:
+				temp = re.findall('(.*)\.(\d{4}?).(\d{2}\.\d{2}?)(.*)', name)
+			if len(temp) <= 0:
+				temp = re.findall('(.*)(Season?).(Episode?)(.*)', name)
+			if len(temp) <= 0:
+				temp = re.findall('(.*)(\d+?)x(\d+?).(.*)', name)
+			if len(temp) > 0:
+			    if name != filename:
+				    newName = name + os.path.splitext(filename)[1]
+					log("changing filename {0} to {1}".format(filename,newName))
+					oldPath = os.path.join(path,filename)
+					newPath = os.path.join(path,newName)
+					os.link(oldPath, newPath)
+					filename = newName
+				break;
         if len(temp) <= 0:
             log("Error parsing filename %s" % filename)
             self.error_files.add(filename)
@@ -117,7 +130,7 @@ class DownloadMonitor():
             filename = filename.replace(temp[0][1],season,1);
             dest = os.path.join(path,filename);
             try:
-                shutil.copy2(src,dest);
+                os.link(src,dest);
                 self.processed_files.add(filename)
                 self.processing_file.write(filename + "\n");
             except IOError, e:
@@ -145,7 +158,7 @@ class DownloadMonitor():
         log("Moving to directory %s" % dest_path)
         src = os.path.join(path,filename)
         try:
-            shutil.copy2(src,dest_path)
+            os.link(src,dest_path)
         except IOError, e:
             log("Unable to copy file. %s" % e )
             self.error_files.add(filename)
