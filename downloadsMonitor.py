@@ -106,9 +106,14 @@ class DownloadMonitor():
                     log("changing filename {0} to {1}".format(filename, new_name))
                     oldPath = os.path.join(path, filename)
                     newPath = os.path.join(path, new_name)
-                    os.link(oldPath, newPath)
-                    filename = new_name
-                    self.processed_files.add(filename)
+                    try:
+                        os.link(oldPath, newPath)
+                        filename = new_name
+                        self.processed_files.add(filename)
+                    except EnvironmentError as e:
+                        log("Unable to link. error={0}\n src={1}\n dest={2}".format(e,oldPath,newPath))
+                        self.error_files.add(filename)
+                        self.error_file.write(filename + "\n")
                 break
         if len(temp) <= 0:
             log("Error parsing filename %s" % filename)
@@ -136,8 +141,9 @@ class DownloadMonitor():
                 os.link(src, dest)
                 self.processed_files.add(filename)
                 self.processing_file.write(filename + "\n")
-            except IOError, e:
-                log("Unable to fix season for %s" % e)
+            except EnvironmentError as e:
+                log(e)
+                log("Unable to fix season for {0}".format(filename))
                 self.error_files.add(filename)
                 self.error_file.write(filename + "\n")
         dest_path = ""
@@ -163,8 +169,8 @@ class DownloadMonitor():
         try:
             dest_full_path = os.path.join(dest_path, filename)
             os.link(src, dest_full_path)
-        except:
-            log("Unable to link. error={0}\\n src={1}\\n dest={2}".format(sys.exc_info()[0],src,dest_full_path))
+        except EnvironmentError as e:
+            log("Unable to link. error={0}\n src={1}\n dest={2}".format(e,src,dest_full_path))
             self.error_files.add(filename)
             self.error_file.write(filename + "\n")
 
