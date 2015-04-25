@@ -110,6 +110,7 @@ class DownloadMonitor():
                         os.link(oldPath, newPath)
                         filename = new_name
                         self.processed_files.add(filename)
+                        self.processing_file.write(filename + "\n")
                     except EnvironmentError as e:
                         log("Unable to link. error={0}\n src={1}\n dest={2}".format(e,oldPath,newPath))
                         self.error_files.add(filename)
